@@ -29,6 +29,7 @@
             </div>
 
             <form id="scanForm" action="/scan" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group">
                     <label for="url">Target URL</label>
                     <input type="url" id="url" name="url" class="form-control" placeholder="https://example.com" required>

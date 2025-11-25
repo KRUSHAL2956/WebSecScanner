@@ -54,6 +54,7 @@ python-dotenv==1.0.0
 # Authentication and security
 flask-login==0.6.3
 werkzeug==3.0.1
+Flask-WTF==1.2.1
 
 # Production server
 gunicorn==21.2.0
@@ -63,3 +64,4 @@ Flask-Mail==0.9.1
 
 # Rate limiting
 Flask-Limiter==3.5.0
+

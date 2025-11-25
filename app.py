@@ -26,6 +26,9 @@ from src.core.logger import setup_logging, get_logger
 
 from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
+from flask_wtf.csrf import CSRFProtect
+from urllib.parse import urlparse
+import re
 
 # Load environment variables
 load_dotenv()
@@ -42,6 +45,17 @@ if not app.secret_key:
     if os.getenv('FLASK_ENV') == 'production':
         raise ValueError("No FLASK_SECRET_KEY set for production configuration")
     app.secret_key = 'default-dev-key-do-not-use-in-prod'
+
+# Configure secure cookies
+app.config.update(
+    SESSION_COOKIE_SECURE=True if os.getenv('FLASK_ENV') == 'production' else False,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=3600  # 1 hour
+)
+
+# Setup CSRF Protection
+csrf = CSRFProtect(app)
 
 # Setup Flask-Login
 login_manager = LoginManager()
@@ -196,6 +210,51 @@ def index():
                          user=current_user)
 
 
+
+def validate_url(url: str) -> tuple[bool, str]:
+    """
+    Validate URL format and accessibility
+    
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    try:
+        # Check if URL is not empty
+        if not url or not url.strip():
+            return False, "URL cannot be empty"
+        
+        # Parse URL
+        parsed = urlparse(url)
+        
+        # Check if has scheme (http/https)
+        if not parsed.scheme:
+            return False, "URL must include http:// or https://"
+        
+        # Only allow http and https
+        if parsed.scheme not in ['http', 'https']:
+            return False, "Only HTTP and HTTPS protocols are supported"
+        
+        # Check if has domain
+        if not parsed.netloc:
+            return False, "Invalid URL format - missing domain"
+        
+        # Check for valid domain format (basic check)
+        domain_pattern = re.compile(
+            r'^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$|^localhost$|^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
+        )
+        if not domain_pattern.match(parsed.netloc.split(':')[0]):
+            return False, "Invalid domain format"
+        
+        # Check URL length
+        if len(url) > 2048:
+            return False, "URL is too long (max 2048 characters)"
+        
+        return True, ""
+        
+    except Exception as e:
+        return False, f"URL validation error: {str(e)}"
+
+
 @app.route('/scan', methods=['POST'])
 @login_required
 def start_scan():
@@ -210,9 +269,16 @@ def start_scan():
         # Validation
         if not target_url:
             return jsonify({'error': 'Target URL is required'}), 400
+        
+        # Validate URL format and accessibility
+        is_valid, error_msg = validate_url(target_url)
+        if not is_valid:
+            logger.warning(f"Invalid URL submitted: {target_url} - {error_msg}")
+            return jsonify({'error': error_msg}), 400
             
         if not scan_types:
             scan_types = ['xss', 'sqli', 'csrf']
+
         
         # Generate scan ID and initialize tracking
         scan_id = str(uuid.uuid4())
@@ -387,6 +453,10 @@ def get_scan_status(scan_id: str):
     if not scan_data:
         return jsonify({'error': 'Scan not found'}), 404
     
+    # Check ownership
+    if scan_data.get('user_id') != current_user.id:
+        return jsonify({'error': 'Unauthorized access to scan status'}), 403
+    
     # Add estimated remaining time logic if needed, or keep it simple
     return jsonify(scan_data)
 
@@ -396,7 +466,7 @@ def get_scan_status(scan_id: str):
 def scan_history():
     """Display scan history page"""
     try:
-        scan_history_list = db.get_all_scans()
+        scan_history_list = db.get_all_scans(user_id=current_user.id)
         return render_template('history.html', scans=scan_history_list)
     except Exception as e:
         return render_template('error.html', error=f'Error loading scan history: {e}'), 500
@@ -409,7 +479,7 @@ def reports():
     try:
         # Reuse history logic but maybe filter for completed scans only?
         # For now, showing all scans is fine as per original logic
-        report_files = db.get_all_scans()
+        report_files = db.get_all_scans(user_id=current_user.id)
         return render_template('reports.html', reports=report_files)
     except Exception as e:
         return render_template('error.html', error=f'Error loading reports: {e}'), 500
@@ -423,6 +493,10 @@ def view_results(scan_id):
         scan_data = db.get_scan(scan_id)
         if not scan_data:
             return render_template('error.html', error=f'Scan not found for ID: {scan_id}'), 404
+            
+        # Check ownership
+        if scan_data.get('user_id') != current_user.id:
+            return render_template('error.html', error='Unauthorized access to scan results'), 403
             
         # If scan_data has 'scan_data' field (new format), use it. 
         # Otherwise use the top-level object (or fallback for old scans if needed)
@@ -448,6 +522,10 @@ def download_report(scan_id):
         scan_record = db.get_scan(scan_id)
         if not scan_record:
             return render_template('error.html', error=f'Scan not found for ID: {scan_id}'), 404
+            
+        # Check ownership
+        if scan_record.get('user_id') != current_user.id:
+            return render_template('error.html', error='Unauthorized access to scan report'), 403
             
         # Extract full scan details
         scan_data = scan_record.get('scan_data', scan_record)

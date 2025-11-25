@@ -62,13 +62,14 @@
         {% endif %}
 
         <form method="POST" action="/signup">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" class="form-control" required autofocus>
+                <input type="text" id="name" name="name" class="form-control" required>
             </div>
             
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">Email</label>
                 <input type="email" id="email" name="email" class="form-control" required>
             </div>
 
@@ -77,8 +78,8 @@
                 <input type="password" id="password" name="password" class="form-control" required>
             </div>
             
-            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
-                Sign Up
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                Create Account
             </button>
         </form>
         
