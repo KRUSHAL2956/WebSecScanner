@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - WebSec Scanner{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <div>
+            <h1 class="page-title">My Profile</h1>
+            <p class="page-subtitle">Manage your account settings and preferences</p>
+        </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 2fr; gap: 32px;">
+        <!-- Profile Card -->
+        <div class="card">
+            <div style="text-align: center; padding: 24px 0;">
+                <div style="width: 80px; height: 80px; background: var(--light-gray); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700;">
+                    {{ user.name[0] | upper }}
+                </div>
+                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">{{ user.name }}</h3>
+                <p style="color: var(--mid-gray); font-size: 14px;">{{ user.email }}</p>
+                <div style="margin-top: 16px;">
+                    <span class="badge badge-info">Standard Plan</span>
+                </div>
+            </div>
+            <hr style="border-top: 1px solid var(--light-gray); margin: 0;">
+            <div style="padding: 24px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="color: var(--mid-gray);">Member Since</span>
+                    <span style="font-weight: 600;">{{ user.created_at.strftime('%b %Y') }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--mid-gray);">Total Scans</span>
+                    <span style="font-weight: 600;">{{ scan_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Form -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Account Settings</h3>
+            </div>
+            
+            {% if message %}
+            <div style="background: #dcfce7; color: #166534; padding: 12px; margin: 24px 24px 0; font-size: 13px; border: 1px solid #166534;">
+                {{ message }}
+            </div>
+            {% endif %}
+            
+            {% if error %}
+            <div style="background: #fee2e2; color: #dc2626; padding: 12px; margin: 24px 24px 0; font-size: 13px; border: 1px solid #dc2626;">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/profile" style="padding: 24px;">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" class="form-control" value="{{ user.name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" disabled style="background: #f3f4f6; cursor: not-allowed;">
+                    <small style="color: var(--mid-gray); margin-top: 4px; display: block;">Email cannot be changed.</small>
+                </div>
+
+                <hr style="border-top: 1px solid var(--light-gray); margin: 24px 0;">
+                
+                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Change Password</h4>
+
+                <div class="form-group">
+                    <label for="current_password">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password" class="form-control">
+                </div>
+                
+                <div style="margin-top: 24px; text-align: right;">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
