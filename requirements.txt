@@ -1,0 +1,65 @@
+# Web Vulnerability Scanner - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ========== CORE DEPENDENCIES ==========
+# Web scraping and HTTP requests
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Web framework for UI
+Flask==3.0.0
+Jinja2==3.1.2
+
+# ========== OPTIONAL DEPENDENCIES ==========
+# For colored terminal output
+colorama==0.4.6
+
+# For PDF report generation
+reportlab==4.0.7
+
+# For advanced crawling (JavaScript-heavy sites)
+# selenium==4.15.2
+# webdriver-manager==4.0.1
+
+# For parsing URLs
+urllib3==2.1.0
+
+# For better HTML parsing
+html5lib==1.1
+
+# ========== DEVELOPMENT DEPENDENCIES ==========
+# For testing
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# For code formatting (optional)
+# black==23.11.0
+# flake8==6.1.0
+
+# ========== NOTES ==========
+# Minimum Python version: 3.8+
+#
+# Installation:
+#   pip install -r requirements.txt
+#
+# For development with all optional packages:
+#   pip install -r requirements.txt reportlab selenium pytest
+#
+# Database dependencies
+pymongo==4.6.0
+dnspython==2.4.2
+python-dotenv==1.0.0
+
+# Authentication and security
+flask-login==0.6.3
+werkzeug==3.0.1
+
+# Production server
+gunicorn==21.2.0
+
+# Email (for future notifications)
+Flask-Mail==0.9.1
+
+# Rate limiting
+Flask-Limiter==3.5.0

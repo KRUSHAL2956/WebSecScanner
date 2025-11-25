@@ -1,0 +1,111 @@
+# Professional gitignore for WebSec Scanner
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Application specific
+output/
+reports/
+logs/
+*.log
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Security
+config/secrets.py
+.env.local
+.env.production
+
+# Docker
+.dockerignore
+
+# Development
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Flask
+instance/
+.webassets-cache
+
+# Security Scanner specific
+*.pyc
+temp_reports/
+.pytest_cache/__pycache__/
+*.pyc
+.pytest_cache/
+logs/
