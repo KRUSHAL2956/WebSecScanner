@@ -1,0 +1,87 @@
+{
+  "application": {
+    "name": "WebSec Scanner",
+    "version": "2.1.0",
+    "description": "Professional Web Application Security Assessment Platform"
+  },
+  "scanning": {
+    "crawl_depth": {
+      "standard": 2,
+      "deep": 5,
+      "surface": 1
+    },
+    "assessment_modes": {
+      "quick": {
+        "name": "Quick Assessment",
+        "description": "Basic vulnerability detection",
+        "payloads_per_module": 10,
+        "timeout": 5
+      },
+      "standard": {
+        "name": "Standard Assessment", 
+        "description": "Comprehensive security analysis",
+        "payloads_per_module": 50,
+        "timeout": 10
+      },
+      "thorough": {
+        "name": "Thorough Assessment",
+        "description": "Deep security investigation", 
+        "payloads_per_module": 100,
+        "timeout": 15
+      }
+    },
+    "capabilities": {
+      "xss": {
+        "name": "Cross-Site Scripting (XSS)",
+        "level": "Advanced",
+        "description": "Comprehensive detection of reflected, stored, and DOM-based XSS vulnerabilities using advanced payload techniques.",
+        "features": [
+          "80+ specialized payloads",
+          "Context-aware detection", 
+          "WAF bypass techniques",
+          "Filter evasion methods"
+        ]
+      },
+      "sqli": {
+        "name": "SQL Injection",
+        "level": "Enterprise", 
+        "description": "Multi-database SQL injection detection with error-based, boolean-based, and time-based techniques.",
+        "features": [
+          "126+ injection patterns",
+          "Multiple database support",
+          "Blind injection detection",
+          "NoSQL injection testing"
+        ]
+      },
+      "csrf": {
+        "name": "CSRF Protection Analysis",
+        "level": "Professional",
+        "description": "Comprehensive analysis of Cross-Site Request Forgery protection mechanisms and session security.",
+        "features": [
+          "Token validation analysis",
+          "Cookie security assessment", 
+          "CORS policy evaluation",
+          "Referer validation testing"
+        ]
+      }
+    }
+  },
+  "network": {
+    "timeout": 10,
+    "max_retries": 3,
+    "user_agent": "WebSec Professional Scanner v2.1.0",
+    "verify_ssl": true,
+    "follow_redirects": true
+  },
+  "reporting": {
+    "output_formats": ["json", "html"],
+    "include_payload_details": true,
+    "risk_scoring": {
+      "critical": 9,
+      "high": 7,
+      "medium": 5,
+      "low": 3,
+      "info": 1
+    }
+  }
+}
