@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WebSec Scanner | Enterprise Security{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                WEBSEC PROFESSIONAL
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a></li>
+                    <li><a href="/history" class="{% if request.path == '/history' %}active{% endif %}">History</a></li>
+                    <li><a href="/reports" class="{% if request.path == '/reports' %}active{% endif %}">Reports</a></li>
+                    <li style="margin-left: 24px; border-left: 1px solid var(--light-gray); padding-left: 24px;">
+                        <a href="/logout" style="color: var(--mid-gray);">Log Out</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 WebSec Scanner Professional. Enterprise Security Assessment Platform.</p>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
