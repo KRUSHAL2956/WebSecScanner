@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- STATS ROW -->
+    <div class="grid mb-4">
+        <div class="stat-card">
+            <div class="stat-value">{{ scan_stats.total_scans }}</div>
+            <div class="stat-label">Total Scans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ scan_stats.vulnerabilities_found }}</div>
+            <div class="stat-label">Vulnerabilities</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ scan_stats.high_risk_scans }}</div>
+            <div class="stat-label">Critical Risks</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ capabilities|length }}</div>
+            <div class="stat-label">Active Modules</div>
+        </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 2fr 1fr;">
+        <!-- MAIN SCANNER SECTION -->
+        <section class="section">
+            <div class="section-header">
+                <h2>New Security Assessment</h2>
+            </div>
+
+            <form id="scanForm" action="/scan" method="POST">
+                <div class="form-group">
+                    <label for="url">Target URL</label>
+                    <input type="url" id="url" name="url" class="form-control" placeholder="https://example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Assessment Modules</label>
+                    <div class="modules-grid">
+                        {% for capability_key, capability in capabilities.items() %}
+                        <label class="module-card">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                <strong>{{ capability.name }}</strong>
+                                <input type="checkbox" name="scan_types" value="{{ capability_key }}" checked>
+                            </div>
+                            <p style="font-size: 13px; color: var(--mid-gray);">{{ capability.description }}</p>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Configuration</label>
+                    <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                        <div>
+                            <label style="font-size: 12px; color: var(--mid-gray);">Crawl Depth</label>
+                            <select name="crawl_depth" class="form-control">
+                                <option value="1">Level 1 (Surface)</option>
+                                <option value="2" selected>Level 2 (Standard)</option>
+                                <option value="3">Level 3 (Deep)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: var(--mid-gray);">Intensity</label>
+                            <select name="scan_intensity" class="form-control">
+                                <option value="basic">Basic (Fast)</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="high">High (Thorough)</option>
+                                <option value="brutal">Brutal (Extreme - Slow)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        Start Assessment
+                    </button>
+                </div>
+            </form>
+
+            <!-- PROGRESS SECTION (Hidden by default) -->
+            <div id="scanProgress" class="progress-container" style="display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                    <h3>Assessment in Progress</h3>
+                    <span class="text-mono" id="progressText">Initializing...</span>
+                </div>
+                
+                <div class="progress-bar-bg">
+                    <div id="progressBar" class="progress-bar-fill"></div>
+                </div>
+
+                    <div class="grid mt-4" style="grid-template-columns: repeat(4, 1fr); text-align: center;">
+                        <div>
+                            <div class="stat-value" style="font-size: 24px;" id="testsCompleted">0</div>
+                            <div class="stat-label">Tests</div>
+                        </div>
+                        <div>
+                            <div class="stat-value" style="font-size: 24px;" id="vulnerabilitiesFound">0</div>
+                            <div class="stat-label">Issues</div>
+                        </div>
+                        <div>
+                            <div class="stat-value" style="font-size: 24px;" id="elapsedTime">00:00</div>
+                            <div class="stat-label">Elapsed</div>
+                        </div>
+                        <div>
+                            <div class="stat-value" style="font-size: 24px;" id="estimatedTime">--:--</div>
+                            <div class="stat-label">Estimate</div>
+                        </div>
+                    </div>
+            </div>
+        </section>
+
+        <!-- RECENT HISTORY SIDEBAR -->
+        <aside>
+            <div class="section-header">
+                <h3>Recent History</h3>
+                <a href="/history" class="btn btn-outline" style="height: 32px; padding: 0 16px; font-size: 11px;">View All</a>
+            </div>
+
+            {% if recent_scans %}
+                {% for scan in recent_scans %}
+                <div class="card mb-4" style="padding: 16px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis;">{{ scan.target_url }}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="badge badge-{{ scan.risk_level.lower() }}">{{ scan.risk_level }}</span>
+                        <span style="font-size: 12px; color: var(--mid-gray);">{{ scan.scan_time[:10] }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card" style="text-align: center; color: var(--mid-gray);">
+                    No recent scans
+                </div>
+            {% endif %}
+        </aside>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Re-implementing the JS logic to match new IDs and classes
+        let currentScanId = null;
+        let statusInterval = null;
+        let scanStartTime = null;
+
+        document.getElementById('scanForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            // UI Updates
+            document.getElementById('scanProgress').style.display = 'block';
+            this.style.opacity = '0.5';
+            this.querySelector('button').disabled = true;
+            
+            scanStartTime = Date.now();
+            setInterval(updateTimer, 1000);
+
+            fetch('/scan', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(data.success) {
+                    currentScanId = data.scan_id;
+                    statusInterval = setInterval(checkStatus, 1000);
+                }
+            });
+        });
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - scanStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('elapsedTime').textContent = `${mins}:${secs}`;
+        }
+
+        function checkStatus() {
+            if(!currentScanId) return;
+            
+            fetch(`/status/${currentScanId}`)
+            .then(r => r.json())
+            .then(data => {
+                // Update Progress
+                document.getElementById('progressBar').style.width = data.progress + '%';
+                document.getElementById('progressText').textContent = data.current_activity;
+                
+                // Update Stats
+                if(data.vulnerabilities_count !== undefined) {
+                    document.getElementById('vulnerabilitiesFound').textContent = data.vulnerabilities_count;
+                }
+                if(data.estimated_time) {
+                    document.getElementById('estimatedTime').textContent = data.estimated_time;
+                }
+                
+                // Check completion
+                if(data.status === 'completed') {
+                    clearInterval(statusInterval);
+                    window.location.href = `/results/${currentScanId}`;
+                }
+            });
+        }
+    </script>
+{% endblock %}

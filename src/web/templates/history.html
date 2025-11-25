@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Scan History | WebSec Scanner{% endblock %}
+
+{% block content %}
+    <div class="section-header">
+        <h2>Assessment History</h2>
+        <div class="stat-label">{{ scans|length }} TOTAL RECORDS</div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Target URL</th>
+                    <th>Risk Level</th>
+                    <th>Vulnerabilities</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scan in scans %}
+                <tr>
+                    <td class="text-mono">{{ scan.scan_time[:19] }}</td>
+                    <td style="font-weight: 500;">{{ scan.target_url }}</td>
+                    <td>
+                        <span class="badge badge-{{ scan.risk_level.lower() }}">{{ scan.risk_level }}</span>
+                    </td>
+                    <td class="text-mono">{{ scan.vulnerabilities_count }}</td>
+                    <td>{{ scan.status|upper }}</td>
+                    <td>
+                        <a href="/results/{{ scan.scan_id }}" class="btn btn-outline" style="height: 32px; padding: 0 16px; font-size: 11px;">View Results</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

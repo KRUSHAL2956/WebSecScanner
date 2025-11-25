@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Results | WebSec Scanner{% endblock %}
+
+{% block content %}
+    <div class="section-header">
+        <div>
+            <div class="stat-label">ASSESSMENT REPORT</div>
+            <h2>{{ results.target_url }}</h2>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <a href="/download/{{ results.scan_id }}?format=pdf" class="btn btn-primary">Download PDF</a>
+            <a href="/download/{{ results.scan_id }}?format=json" class="btn btn-outline">Download JSON</a>
+        </div>
+    </div>
+
+    <!-- SUMMARY STATS -->
+    <div class="grid mb-4">
+        <div class="stat-card">
+            <div class="stat-value">{{ results.risk_score.level }}</div>
+            <div class="stat-label">Risk Level</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ results.total_vulns }}</div>
+            <div class="stat-label">Total Issues</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ results.scan_duration|round(2) }}s</div>
+            <div class="stat-label">Duration</div>
+        </div>
+    </div>
+
+    <!-- VULNERABILITIES LIST -->
+    <div class="section">
+        <h3>Detailed Findings</h3>
+        {% if results.vulnerabilities %}
+            {% for vuln in results.vulnerabilities %}
+            <div class="card mb-4">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="badge badge-{{ vuln.severity.lower() }}">{{ vuln.severity }}</span>
+                        <h4 style="margin: 0;">{{ vuln.type }}</h4>
+                    </div>
+                </div>
+                <p style="margin-bottom: 16px; color: var(--dark-gray);">{{ vuln.description }}</p>
+                
+                {% if vuln.payload %}
+                <div style="background: var(--off-white); padding: 16px; border: 1px solid var(--light-gray);">
+                    <div class="stat-label" style="margin-bottom: 8px;">PAYLOAD</div>
+                    <code class="text-mono" style="word-break: break-all;">{{ vuln.payload }}</code>
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 16px;">
+                    <div class="stat-label" style="margin-bottom: 8px;">REMEDIATION RECOMMENDATION</div>
+                    <p style="font-size: 13px; color: var(--dark-gray);">
+                        {% if 'SQL' in vuln.type %}
+                            Use prepared statements (parameterized queries) for all database access. Avoid constructing SQL queries with string concatenation. Validate all inputs.
+                        {% elif 'XSS' in vuln.type %}
+                            Implement Content Security Policy (CSP). Contextually encode all user-supplied data before rendering it in the browser (e.g., HTML entity encoding).
+                        {% elif 'CSRF' in vuln.type %}
+                            Implement anti-CSRF tokens in all state-changing forms. Ensure SameSite cookie attributes are set to Strict or Lax.
+                        {% else %}
+                            Validate and sanitize all user inputs. Follow the principle of least privilege.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card" style="text-align: center; padding: 48px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; margin-bottom: 16px; color: var(--mid-gray);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <h3>No Vulnerabilities Detected</h3>
+                <p style="color: var(--mid-gray);">The target appears secure against the selected scan modules.</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
